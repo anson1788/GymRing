@@ -11,6 +11,7 @@
 #include "config.h"
 #include "helperClass.h"
 #include <IRremote.h>
+#include <ArduinoJson.h>
 int RECV_PIN = 34;
 
 IRrecv irrecv(RECV_PIN);
@@ -64,10 +65,12 @@ void loop() {
   }else if(state==InGameMode){
     DisplayDrawContent("Gaming");
     GetGyroscopeData();
-    client.poll();
   }
   int potValue = analogRead(35);
   //Serial.println(potValue);
+  if(socketState!=WaitForFirstConnect){
+     client.poll();
+  }
   if(state!=WaitForIRInput){
     delay(100);
   }
@@ -86,7 +89,7 @@ void HandleIRData(){
       case 0x8C22657B: rv = -11 ;  crtInput = "-"; Serial.println(" LEFT ARROW");    break;
       case 0xFF10EF: rv = -11 ;  crtInput = "-"; Serial.println(" LEFT ARROW");    break;
 
-      casr 0x488F3CBB: rv = -12; crtInput = "enter";  Serial.println(" -OK-");    break;
+      case 0x488F3CBB: rv = -12; crtInput = "enter";  Serial.println(" -OK-");    break;
       case 0xFF38C7: rv = -12 ;  crtInput = "enter";  Serial.println(" -OK-");    break;
       
       case 0xFF5AA5: rv = -13 ;   Serial.println(" RIGHT ARROW");   break;
@@ -169,17 +172,50 @@ void onEventsCallback(WebsocketsEvent event, String data) {
     Serial.println("111MSG");
     if(event == WebsocketsEvent::ConnectionOpened) {
         Serial.println("Connnection Opened");
-        socketState = WaitForSocketConnection;
-        client.send("Hello Server");
+        state = WaitForSocketConnection;
+        connectToRoom();
     } else if(event == WebsocketsEvent::ConnectionClosed) {
         Serial.println("Connnection Closed");
     } else if(event == WebsocketsEvent::GotPing) {
         Serial.println("Got a Ping!");
+        StaticJsonDocument<200> doc;
+        DeserializationError error = deserializeJson(doc, data);
+        if (error) {
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.c_str());
+          return;
+        }
+        String action = doc["action"];
+        Serial.println("get a ping action : "+action);
     } else if(event == WebsocketsEvent::GotPong) {
         Serial.println("Got a Pong!");
     }
 }
 
+void connectToRoom(){
+      socketState = WaitForControllerMsg;
+      String lastCharacter = inputString.substring(inputString.length() - 1, inputString.length());
+      String roomid = inputString.substring(0, inputString.length()-1);
+      String _sensorType = "";
+      if(lastCharacter=="1"){
+        _sensorType = "sensor1";
+      }
+
+      if(lastCharacter=="2"){
+        _sensorType = "sensor2";
+      }
+
+      if(lastCharacter=="3"){
+        _sensorType = "sensor3";
+      }
+
+      if(lastCharacter=="4"){
+        _sensorType = "sensor4";
+      }
+
+        client.send("{\"action\":\"registerType\",\"type\":\""+_sensorType+"\",\"roomid\":\""+roomid+"\"}");
+      //client.send("{'action':'registerType','type':'"+_sensorType+"','roomid':'"+roomid+"'}");
+}
 
 void DisplayInit(){
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -200,9 +236,8 @@ void DisplayDrawContentForIRInput(){
   display.setCursor(0,0);
   
   if(crtInput!=""){
-    //String lastCharacter = inputString.substring(inputString.length() - 1, inputString.length());
       if(crtInput=="enter"){
-        socketState = StartSocketConnection;
+        state = StartSocketConnection;
         return;
       }
       

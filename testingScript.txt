@@ -1,4 +1,7 @@
-wscat -c wss://fmt0duuywk.execute-api.us-east-1.amazonaws.com/uat
+wscat -c wss://fmt0duuywk.execute-api.us-east-
+
+
+
 {"action":"registerType","type":"gamehost"}
 
 
