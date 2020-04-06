@@ -42,7 +42,6 @@ void setup() {
   MPU6050_Init();
   WifiConnectInit();
   DisplayInit();
-  ConnectWebSocket();
   irrecv.enableIRIn();
   pinMode(35,INPUT_PULLUP);
   delay(100);
@@ -51,15 +50,12 @@ void setup() {
 
 
 void loop() {
-
- 
-
   if(state==WaitForIRInput){
     HandleIRData();
     DisplayDrawContentForIRInput();
   }else if(state==StartSocketConnection){
     DisplayDrawContent("Trying to Connect to server");
-    state = WaitForSocketConnection;
+    ConnectWebSocket();
   }else if(state==WaitForSocketConnection){
     DisplayDrawContent("Waiting for server to connect");
     if(socketState == RegisterCompleted){
@@ -89,8 +85,10 @@ void HandleIRData(){
       
       case 0x8C22657B: rv = -11 ;  crtInput = "-"; Serial.println(" LEFT ARROW");    break;
       case 0xFF10EF: rv = -11 ;  crtInput = "-"; Serial.println(" LEFT ARROW");    break;
+
+      casr 0x488F3CBB: rv = -12; crtInput = "enter";  Serial.println(" -OK-");    break;
+      case 0xFF38C7: rv = -12 ;  crtInput = "enter";  Serial.println(" -OK-");    break;
       
-      case 0xFF38C7: rv = -12 ;   Serial.println(" -OK-");    break;
       case 0xFF5AA5: rv = -13 ;   Serial.println(" RIGHT ARROW");   break;
       case 0xFF4AB5: rv = -14 ;   Serial.println(" DOWN ARROW"); break;
       
@@ -151,6 +149,8 @@ void WifiConnectInit(){
   delay(2000);
 }
 
+
+
 void ConnectWebSocket(){
       Serial.print("Start connect to wifi");
       client.setInsecure();
@@ -169,7 +169,8 @@ void onEventsCallback(WebsocketsEvent event, String data) {
     Serial.println("111MSG");
     if(event == WebsocketsEvent::ConnectionOpened) {
         Serial.println("Connnection Opened");
-        socketState = RegisterCompleted;
+        socketState = WaitForSocketConnection;
+        client.send("Hello Server");
     } else if(event == WebsocketsEvent::ConnectionClosed) {
         Serial.println("Connnection Closed");
     } else if(event == WebsocketsEvent::GotPing) {
@@ -200,7 +201,11 @@ void DisplayDrawContentForIRInput(){
   
   if(crtInput!=""){
     //String lastCharacter = inputString.substring(inputString.length() - 1, inputString.length());
-
+      if(crtInput=="enter"){
+        socketState = StartSocketConnection;
+        return;
+      }
+      
       if(crtInput!="-"){
          inputString = inputString + crtInput;
          Serial.println(" input val = " + inputString);  
@@ -213,7 +218,6 @@ void DisplayDrawContentForIRInput(){
   }else if(inputString!=""){
     display.print(inputString);
     display.display();
-
   }else{
      display.print("Please input roomid");  
      display.display();

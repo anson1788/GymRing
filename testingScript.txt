@@ -1,0 +1,5 @@
+wscat -c wss://fmt0duuywk.execute-api.us-east-1.amazonaws.com/uat
+{"action":"registerType","type":"gamehost"}
+
+
+{"action":"registerType","type":"sensor1","roomid":"8019"}
