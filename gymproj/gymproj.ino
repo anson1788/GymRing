@@ -213,7 +213,7 @@ void connectToRoom(){
         _sensorType = "sensor4";
       }
 
-        client.send("{\"action\":\"registerType\",\"type\":\""+_sensorType+"\",\"roomid\":\""+roomid+"\"}");
+        client.send("{\"action\":\"registerType\",\"type\":\"gamehost\"}");
       //client.send("{'action':'registerType','type':'"+_sensorType+"','roomid':'"+roomid+"'}");
 }
 
