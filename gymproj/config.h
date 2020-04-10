@@ -4,8 +4,8 @@
 //sample size
 #define SAMPLE_SIZE_DOUBLE 10
 #define SAMPLE_SIZE_INT 10
-enum GameState { WaitForIRInput, StartSocketConnection, WaitForSocketConnection, InGameMode };
-enum SocketState { WaitForFirstConnect, WaitForControllerMsg, RegisterCompleted };
+enum GameState { WaitForIRInput, StartSocketConnection, WaitForSocketConnection, WaitingForGameToStart,InGameMode, BLESettingMode };
+enum SocketState { WaitForFirstConnect, WaitForControllerMsg, RegisterCompleted ,RequestingGameToStart,GameStarted};
 
 //wifiConfig
 char* ssid = "HOSK2018";

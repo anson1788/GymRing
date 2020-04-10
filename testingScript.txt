@@ -1,8 +1,15 @@
-wscat -c wss://fmt0duuywk.execute-api.us-east-
+wscat -c wss://fmt0duuywk.execute-api.us-east-1.amazonaws.com/uat
 
 
 
 {"action":"registerType","type":"gamehost"}
 
 
-{"action":"registerType","type":"sensor1","roomid":"8019"}
+{"action":"registerType","type":"sensor1","roomid":"1500"}
+
+{"action":"InGameType","type":"startGame","sender":"","roomid":""}
+
+response
+{"action":"register","response":"success"}
+{"action":"InGameType","type":"startGame","roomid":"1500"}
+{"action":"startGame","response":"success","gamehost":""}
