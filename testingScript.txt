@@ -1,13 +1,11 @@
 wscat -c wss://fmt0duuywk.execute-api.us-east-1.amazonaws.com/uat
 
 
-
+request
 {"action":"registerType","type":"gamehost"}
-
-
 {"action":"registerType","type":"sensor1","roomid":"1500"}
-
 {"action":"InGameType","type":"startGame","sender":"","roomid":""}
+{"action":"InGameType","type":"ringData","sender":"sensor1","gamehost":"","ringData":"","gyroscopeData":"","accelerometerData":""}
 
 response
 {"action":"register","response":"success"}

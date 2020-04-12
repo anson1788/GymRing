@@ -5,17 +5,12 @@
 #define SAMPLE_SIZE_DOUBLE 10
 #define SAMPLE_SIZE_INT 10
 enum GameState { WaitForIRInput, StartSocketConnection, WaitForSocketConnection, WaitingForGameToStart,InGameMode, BLESettingMode };
-enum SocketState { WaitForFirstConnect, WaitForControllerMsg, RegisterCompleted ,RequestingGameToStart,GameStarted};
+enum SocketState { WaitForWifi,WaitForFirstConnect, WaitForControllerMsg, RegisterCompleted ,RequestingGameToStart,GameStarted};
 
 //wifiConfig
-char* ssid = "HOSK2018";
-char* password = "94858500";
 char path[] = "/uat";
 char host[] = "fmt0duuywk.execute-api.us-east-1.amazonaws.com";
-String
-
-
-websockets_server = "wss://fmt0duuywk.execute-api.us-east-1.amazonaws.com/uat";
+String websockets_server = "wss://fmt0duuywk.execute-api.us-east-1.amazonaws.com/uat";
 
 
 //screen display

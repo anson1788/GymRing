@@ -3,6 +3,7 @@
  *  The API is almost the same as with the WiFi Shield library,
  *  the most obvious difference being the different file you need to include:
  */
+#define INTERRUPT_ATTR IRAM_ATTR 
 #include <WiFi.h>
 #include <ArduinoWebsockets.h>
 #include <Wire.h>
@@ -22,10 +23,11 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 int16_t AccelX, AccelY, AccelZ, Temperature, GyroX, GyroY, GyroZ;
 SmoothValueDouble S_Ax, S_Ay, S_Az, S_T, S_Gx, S_Gy, S_Gz; 
+SmoothValueInt flexValue;
 
 using namespace websockets;
 WebsocketsClient client;
-SocketState socketState = WaitForFirstConnect;
+SocketState socketState = WaitForWifi;
 
 GameState state = WaitForIRInput;
 String inputString = "";
@@ -34,14 +36,15 @@ String role="";
 String roomId="";
 int timerCounter = 0;
 
+
 #include "gyroscopeFunc.h"
 #include "displayFunc.h"
 #include "networkFunc.h"
 
 void setup() {
   Wire.begin();
+  WifiConnectInit();
   Serial.begin(115200);
-
   MPU6050_Init();
   DisplayInit();
   irrecv.enableIRIn();
@@ -59,7 +62,10 @@ void loop() {
     DisplayDrawContentForIRInput();
   }else if(state==StartSocketConnection){
     DisplayDrawContent("Trying to Connect to server");
-    ConnectWebSocket();
+    if(socketState==SocketState::WaitForWifi){
+      socketState=SocketState::WaitForFirstConnect;
+      ConnectWebSocket();
+    }
   }else if(state==WaitForSocketConnection){
     DisplayDrawContent("Waiting for server to connect");
     if(socketState == RegisterCompleted){
@@ -78,11 +84,10 @@ void loop() {
   }else if(state==InGameMode){
     DisplayDrawContent("Gaming");
     GetGyroscopeData();
-    int potValue = analogRead(35);
-    Serial.println(potValue);
   }
 
-  if(socketState!=WaitForFirstConnect){
+   handleSensorData();
+  if(socketState!=WaitForFirstConnect && socketState!=WaitForWifi){
      client.poll();
   }
   if(state!=WaitForIRInput){
@@ -91,21 +96,39 @@ void loop() {
 }
 
 
+void handleSensorData(){
+      int potValue = analogRead(35);
+      flexValue.insert(potValue);  
+      Serial.println("port data" );
+      Serial.println(potValue );
+}
 
 
 void ConnectWebSocket(){
-      WifiConnectInit();
-      Serial.print("Start connect to wifi");
+      
       client.setInsecure();
       client.onMessage(onMessageCallback);
       client.onEvent(onEventsCallback);
-      // Connect to server
       client.connect(websockets_server);
+     
 }
 
 void onMessageCallback(WebsocketsMessage message) {
     Serial.print("Got Message: ");
     Serial.println(message.data());
+    StaticJsonDocument<200> doc;
+    String _data = message.data();
+    int firstBacketIdx = _data.indexOf('{');
+    _data = _data.substring(firstBacketIdx);
+    Serial.print("data "+_data);
+    DeserializationError error = deserializeJson(doc, _data);
+    if (error) {
+         
+          Serial.println(error.c_str());
+          return;
+    }
+    String action = doc["action"];
+    HandleMsgEvent(doc);
 }
 
 void onEventsCallback(WebsocketsEvent event, String data) {
@@ -118,17 +141,7 @@ void onEventsCallback(WebsocketsEvent event, String data) {
         Serial.println("Connnection Closed");
     } else if(event == WebsocketsEvent::GotPing) {
         Serial.println("Got a Ping!");
-        StaticJsonDocument<200> doc;
-        DeserializationError error = deserializeJson(doc, data);
-        if (error) {
-          Serial.print(F("deserializeJson() failed: "));
-          Serial.println(error.c_str());
-          return;
-        }
-        String action = doc["action"];
-        Serial.println("get a ping action : "+action);
-        HandleMsgEvent(doc);
-        
+        Serial.println("get a ping action : ");
     } else if(event == WebsocketsEvent::GotPong) {
         Serial.println("Got a Pong!");
     }

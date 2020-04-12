@@ -2,7 +2,11 @@
 #define networkFunc_h
 
 void WifiConnectInit(){
+  Serial.println("get wifi");
+  char ssid[] = "HOSK2018";
+  char password[] = "94858500";
   WiFi.begin(ssid, password);
+  Serial.println("get wifi22");
   while (WiFi.status() != WL_CONNECTED) {
       delay(1000);
       Serial.println("Connecting to WiFi..");
