@@ -62,7 +62,7 @@ void GetGyroscopeData(){
 
   S_T.insert(T);       
 
-  /*
+    /*
   Serial.print("Ax: "); Serial.print(S_Ax.getValue());
   Serial.print(" Ay: "); Serial.print(S_Ay.getValue());
   Serial.print(" Az: "); Serial.print(S_Az.getValue());
@@ -70,7 +70,7 @@ void GetGyroscopeData(){
   Serial.print(" Gx: "); Serial.print(S_Gx.getValue());
   Serial.print(" Gy: "); Serial.print(S_Gy.getValue());
   Serial.print(" Gz: "); Serial.println(S_Gz.getValue());
-  */
+ */
 }
 
 #endif
