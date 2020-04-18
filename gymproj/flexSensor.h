@@ -4,37 +4,31 @@
 enum RingState { Normal, Inbound, InboundOut, Outbound, OutboundIn};
 class FlexDataHandler {
   public:
-    RingState _ringstate = RingState::Normal ;
-    SmoothValueFlexInt flexValue;
+    RingState _ringstate = RingState::Normal;
     SmoothValueFlexInt flexValue32;
     long SensorLastClock = 0;
     long SensorCrtClock = 0;
     long lastMonitorTime = 0;
 
 
-    int lastValIn = 0;
-    int StateArrIn[6]   = {999, 999, 999, 999, 999, 999};
-    long StateTimeIn[6] = {999, 999, 999, 999, 999, 999};
+    int lastVal = 0;
+    int StateArr[6]   = {999, 999, 999, 999, 999, 999};
+    long StateTime[6] = {999, 999, 999, 999, 999, 999};
     
-
-    int lastValOut = 0;
-    int StateArrOut[6]   = {999, 999, 999, 999, 999, 999};
-    long StateTimeOut[6] = {999, 999, 999, 999, 999, 999};
-
-    int crtSeqIdxOut[6]   = {999, 999, 999, 999, 999, 999};
+    int crtSeqIdx[6]   = {999, 999, 999, 999, 999, 999};
 
 
     boolean initReady = false;
     int stableThrehold = 15;
     boolean checkIsStable() {
-      for (int i = 0; i < (sizeof(crtSeqIdxOut) / sizeof(int)) - 1; i++) {
-        if (crtSeqIdxOut[i] == 999) {
+      for (int i = 0; i < (sizeof(crtSeqIdx) / sizeof(int)) - 1; i++) {
+        if (crtSeqIdx[i] == 999) {
           return false;
         }
       }
 
-      for (int i = 0; i < (sizeof(crtSeqIdxOut) / sizeof(int)) - 1; i++) {
-        if (abs(crtSeqIdxOut[i] - crtSeqIdxOut[i + 1]) > stableThrehold) {
+      for (int i = 0; i < (sizeof(crtSeqIdx) / sizeof(int)) - 1; i++) {
+        if (abs(crtSeqIdx[i] - crtSeqIdx[i + 1]) > stableThrehold) {
           return false;
         }
       }
@@ -42,46 +36,12 @@ class FlexDataHandler {
     };
 
 
-
-    void pushCrtArrOut() {
-      for (int i = (sizeof(crtSeqIdxOut) / sizeof(int)) - 1; i >= 0; i--) {
+    void pushStatueArr() {
+      for (int i = (sizeof(StateArr) / sizeof(int)) - 1; i >= 0; i--) {
         if (i == 0) {
-          crtSeqIdxOut[i] = flexValue.getValue();
+          StateArr[i] = flexValue32.getValue();
         } else {
-          crtSeqIdxOut[i] = crtSeqIdxOut[i - 1];
-        }
-      }
- 
-    };
-
-    void pushStatueArrOut() {
-      for (int i = (sizeof(StateArrOut) / sizeof(int)) - 1; i >= 0; i--) {
-        if (i == 0) {
-          StateArrOut[i] = flexValue.getValue();
-        } else {
-          StateArrOut[i] = StateArrOut[i - 1];
-        }
-      }
- 
-    };
-    void pushStateTimeOut() {
-      for (int i = (sizeof(StateTimeOut) / sizeof(int)) - 1; i >= 0; i--) {
-        if (i == 0) {
-          StateTimeOut[i] = SensorCrtClock;
-        } else {
-          StateTimeOut[i] = StateTimeOut[i - 1];
-        }
-      }
-    };
-
- 
-
-    void pushStatueArrIn() {
-      for (int i = (sizeof(StateArrIn) / sizeof(int)) - 1; i >= 0; i--) {
-        if (i == 0) {
-          StateArrIn[i] = flexValue32.getValue();
-        } else {
-          StateArrIn[i] = StateArrIn[i - 1];
+          StateArr[i] = StateArr[i - 1];
         }
       }
       /*
@@ -93,12 +53,14 @@ class FlexDataHandler {
        Serial.print("\n----\n");
        */
     };
-    void pushStateTimeIn() {
-      for (int i = (sizeof(StateTimeIn) / sizeof(int)) - 1; i >= 0; i--) {
+
+    
+    void pushStateTime() {
+      for (int i = (sizeof(StateTime) / sizeof(int)) - 1; i >= 0; i--) {
         if (i == 0) {
-          StateTimeIn[i] = SensorCrtClock;
+          StateTime[i] = SensorCrtClock;
         } else {
-          StateTimeIn[i] = StateTimeIn[i - 1];
+          StateTime[i] = StateTime[i - 1];
         }
       }
       /*
@@ -112,16 +74,25 @@ class FlexDataHandler {
     };
 
     
+    void pushCrtArr() {
+      for (int i = (sizeof(crtSeqIdx) / sizeof(int)) - 1; i >= 0; i--) {
+        if (i == 0) {
+          crtSeqIdx[i] = flexValue32.getValue();
+        } else {
+          crtSeqIdx[i] = crtSeqIdx[i - 1];
+        }
+      }
+ 
+    };
     void processData(int crtReading, int crtReading32) {
       SensorCrtClock =  millis();
       flexValue32.insert(crtReading32);
-      flexValue.insert(crtReading);
-      pushCrtArrOut();
+      pushCrtArr();
       if (checkInitReady() == false) {
         return;
       }
 
-      if (SensorCrtClock - lastMonitorTime >= 50) {
+      if (SensorCrtClock - lastMonitorTime >= 10) {
         performMonitoring();
         lastMonitorTime = SensorCrtClock;
       }
@@ -130,12 +101,9 @@ class FlexDataHandler {
     };
 
     void performMonitoring() {
-      if (lastValOut == 0) {
-        lastValOut = flexValue.getValue();
-      }
-
-      if (lastValIn == 0) {
-        lastValIn = flexValue32.getValue();
+    
+      if (lastVal == 0) {
+        lastVal = flexValue32.getValue();
       }
       
       if (lastMonitorTime == 0) {
@@ -143,119 +111,74 @@ class FlexDataHandler {
       }
 
       /*
-        Out out
-        600 500 400 400 500 500
-
-
-        Out In
-        400 500 500 600
-
+      (          )   ---   1200         (1200<x)    (x>1200)
+        (      )     ---   1200 - 800   (800<x<1200)(x>800 , x<1200) 
+          (  )       ---   800          (x<800)     (x<800)
+ 
       */
-      int triggerValOut = 30;
-      if (_ringstate == RingState::Normal) {
-        triggerValOut = 50;
+    
+     
+       if (abs(lastVal - flexValue32.getValue()) > 60) {
+        if (StateArr[0] == 999) {
+          StateArr[0] = lastVal;
+        }
+        if (StateTime[0] == 999) {
+          StateTime[0] = lastMonitorTime;
+        }
+        pushStatueArr();
+        pushStateTime();
+        lastVal = flexValue32.getValue();
+        /*
+        Serial.print("\n---\n");  
+        for (int i = 0; i < (sizeof(StateArr) / sizeof(int)) - 1; i++) {
+          Serial.print( StateArr[i]);
+          Serial.print(", "); 
+        }
+        Serial.print("\n---\n");  
+        */
       }
 
-      //Serial.print(flexValue32.getValue());
-      if (abs(lastValOut - flexValue.getValue()) > triggerValOut) {
-        if (StateArrOut[0] == 999) {
-          StateArrOut[0] = lastValOut;
-        }
-        if (StateTimeOut[0] == 999) {
-          StateTimeOut[0] = lastMonitorTime;
-        }
-        pushStatueArrOut();
-        pushStateTimeOut();
-        lastValOut = flexValue.getValue();
+      if(_ringstate == RingState::Normal){
+          if(StateArr[0]!=999 && StateArr[1]!=999 ){
+                if(StateArr[0]>1200){
+                    //trigger outbound
+                    _ringstate = RingState::Outbound;
+                    sendStatusForGame("Outbound");
+                     Serial.print("\n  ---  Outbound --- \n");
+                }else if(StateArr[0]<850){  
+                    _ringstate = RingState::Inbound;
+                    Serial.print("\n  ---  Inbound --- \n");
+                    sendStatusForGame("Inbound");
+                }else{
+                  /*
+                    Serial.print("\n ");
+                    Serial.print(StateArr[0]);
+                    Serial.print("\n ");
+                    */
+                }
+          }  
+      }else if(_ringstate ==  RingState::Outbound){
+          if(StateArr[0]!=999 && StateArr[1]!=999 ){
+                if(StateArr[0]<1200 && StateArr[0]>850){
+                    //trigger outbound
+                    _ringstate = RingState::Normal;
+                    sendStatusForGame("outBoundIn");
+                    Serial.print("\n  ---  Normal --- \n");
+                }
+          }  
+      }else if(_ringstate ==  RingState::Inbound){
+          if(StateArr[0]!=999 && StateArr[1]!=999 ){
+                if(StateArr[0]<1200 && StateArr[0]>850){
+                    //trigger outbound
+                    _ringstate = RingState::Normal;
+                    sendStatusForGame("InboundOut");
+                    Serial.print("\n  ---  Normal --- \n");
+                }
+          }  
       }
+      
 
-      //----------------------------------------------------
-      int triggerValIn = 30;
-      if (_ringstate == RingState::Normal) {
-        triggerValIn = 50;
-      }
-       if (abs(lastValIn - flexValue32.getValue()) > triggerValIn) {
-        if (StateArrIn[0] == 999) {
-          StateArrIn[0] = lastValIn;
-        }
-        if (StateTimeIn[0] == 999) {
-          StateTimeIn[0] = lastMonitorTime;
-        }
-        pushStatueArrIn();
-        pushStateTimeIn();
-        lastValIn = flexValue32.getValue();
-      }
-
-      if (_ringstate == RingState::Normal 
-          ) {
-        if (StateArrOut[0] != 999 && StateArrOut[1] != 999) {
-          if (StateArrOut[1] - StateArrOut[0] > triggerValOut) {
-            _ringstate = RingState::Outbound;
-            Serial.print("trigger OutBound\n");
-            return;
-          }
-        }
-        if (StateArrIn[0] != 999 && StateArrOut[1] != 999) {
-          if (StateArrIn[1]-StateArrIn[0] > triggerValIn) {
-            _ringstate = RingState::Inbound;
-            Serial.print("trigger Inbound\n");
-            return;
-          }
-        }
-      }
-
-      if (_ringstate == RingState::Outbound) {
-        if (StateArrOut[0] != 999 && StateArrOut[1] != 999) {
-          if (StateArrOut[0] - StateArrOut[1] > triggerValOut) {
-            _ringstate = RingState::OutboundIn;
-            Serial.print("trigger OutboundIn\n");
-            return;
-          }
-        }
-      }
-
-      if (_ringstate == RingState::OutboundIn) {
-        if (SensorCrtClock - StateTimeOut[0] > 100) {
-          for (int i = (sizeof(StateArrOut) / sizeof(int)) - 1; i >= 0; i--) {
-            StateArrOut[i] = 999;
-            StateTimeOut[i] = 999;
-          }
-          for (int i = (sizeof(StateArrIn) / sizeof(int)) - 1; i >= 0; i--) {
-            StateArrIn[i] = 999;
-            StateTimeIn[i] = 999;
-          }
-          _ringstate = RingState::Normal;
-          Serial.print("trigger return to Normal\n");
-          return;
-        }
-      }
-
-      if (_ringstate == RingState::Inbound) {
-        if (StateArrIn[0] != 999 && StateArrOut[1] != 999) {
-          if (StateArrIn[0] - StateArrIn[1] > triggerValIn) {
-            _ringstate = RingState::InboundOut;
-            Serial.print("trigger InboundOut\n");
-            return;
-          }
-        }
-      }
-
-      if (_ringstate == RingState::InboundOut) {
-        if (SensorCrtClock - StateTimeIn[0] > 100) {
-          for (int i = (sizeof(StateArrIn) / sizeof(int)) - 1; i >= 0; i--) {
-            StateArrIn[i] = 999;
-            StateTimeIn[i] = 999;
-          }
-
-          for (int i = (sizeof(StateArrOut) / sizeof(int)) - 1; i >= 0; i--) {
-            StateArrOut[i] = 999;
-            StateTimeOut[i] = 999;
-          }
-          _ringstate = RingState::Normal;
-          Serial.print("trigger return to Normal\n");
-          return;
-        }
-      }
+  
       
     }
 
@@ -270,7 +193,11 @@ class FlexDataHandler {
       }
       return true;
     }
-
+  void sendStatusForGame(String _status){
+      client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"ringData\":\""+_status+"\"}");
+  }
 };
+
+
 
 #endif

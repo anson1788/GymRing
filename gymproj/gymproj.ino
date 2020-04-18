@@ -16,7 +16,7 @@
 #include "helperClass.h"
 #include <IRremote.h>
 #include <ArduinoJson.h>
-#include "flexSensor.h"
+
 int RECV_PIN = 34;
 
 IRrecv irrecv(RECV_PIN);
@@ -39,12 +39,13 @@ String crtInput = "";
 String role = "";
 String roomId = "";
 int timerCounter = 0;
+String gameHostId ="";
 
 
 #include "gyroscopeFunc.h"
 #include "displayFunc.h"
 #include "networkFunc.h"
-
+#include "flexSensor.h"
 void setup() {
   Wire.begin();
   WifiConnectInit();
@@ -54,7 +55,7 @@ void setup() {
   irrecv.enableIRIn();
   pinMode(35, INPUT_PULLUP);
   delay(100);
-
+    Serial.println("ss");
 }
 
 
@@ -169,16 +170,22 @@ void onEventsCallback(WebsocketsEvent event, String data) {
 
 void HandleMsgEvent(StaticJsonDocument<200> _data) {
   String action = _data["action"];
+  Serial.print("print i am here");
+  Serial.print(action);
   if (action == "register") {
     String response = _data["response"];
+      Serial.print("print i am here22");
+      Serial.print(response);
     if (response == "success") {
       requestToStartGame();
     }
   } else if (action = "startGame") {
     String response = _data["response"];
+    String gamehost = _data["gamehost"];
     if (response == "success") {
       socketState = SocketState::GameStarted;
       state = InGameMode;
+      gameHostId = gamehost;
     }
   }
 }

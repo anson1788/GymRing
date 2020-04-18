@@ -11,3 +11,6 @@ response
 {"action":"register","response":"success"}
 {"action":"InGameType","type":"startGame","roomid":"1500"}
 {"action":"startGame","response":"success","gamehost":""}
+
+
+{"action":"InGameType","type":"startGame","sender":"","roomid":"3248"}

@@ -44,6 +44,6 @@ void connectToRoom(){
 
 void requestToStartGame(){
       socketState = SocketState::RequestingGameToStart;
-      client.send("{\"action\":\"InGameType\",\"type\":\"startGame\",\"role\":\""+role+"\"}");
+      client.send("{\"action\":\"InGameType\",\"type\":\"startGame\",\"role\":\""+role+"\",\"roomid\":\""+roomId+"\",\"\":\"\"}");
 }
 #endif
