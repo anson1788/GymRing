@@ -89,9 +89,9 @@ void loop() {
   } else if (state == InGameMode) {
     DisplayDrawContent("Gaming");
     GetGyroscopeData();
+    handleSensorData();
   }
-  GetGyroscopeData();
-  handleSensorData();
+
   if (socketState != WaitForFirstConnect && socketState != WaitForWifi) {
     client.poll();
   }

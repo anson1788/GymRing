@@ -5,7 +5,7 @@
 //sample size
 #define SAMPLE_SIZE_DOUBLE 10
 #define SAMPLE_SIZE_INT 10
-#define SAMPLE_SIZE_FLEX_INT 20
+#define SAMPLE_SIZE_FLEX_INT 1
 
 enum GameState { WaitForIRInput, StartSocketConnection, WaitForSocketConnection, WaitingForGameToStart,InGameMode, BLESettingMode };
 enum SocketState { WaitForWifi,WaitForFirstConnect, WaitForControllerMsg, RegisterCompleted ,RequestingGameToStart,GameStarted};

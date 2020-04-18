@@ -118,7 +118,7 @@ class FlexDataHandler {
       */
     
      
-       if (abs(lastVal - flexValue32.getValue()) > 60) {
+       if (abs(lastVal - flexValue32.getValue()) > 30) {
         if (StateArr[0] == 999) {
           StateArr[0] = lastVal;
         }
@@ -137,15 +137,18 @@ class FlexDataHandler {
         Serial.print("\n---\n");  
         */
       }
+      
+      StateArr[0] = flexValue32.getValue();
+      StateArr[1] = flexValue32.getValue();
 
       if(_ringstate == RingState::Normal){
           if(StateArr[0]!=999 && StateArr[1]!=999 ){
-                if(StateArr[0]>1200){
+                if(StateArr[0]>1300){
                     //trigger outbound
                     _ringstate = RingState::Outbound;
                     sendStatusForGame("Outbound");
                      Serial.print("\n  ---  Outbound --- \n");
-                }else if(StateArr[0]<850){  
+                }else if(StateArr[0]<900){  
                     _ringstate = RingState::Inbound;
                     Serial.print("\n  ---  Inbound --- \n");
                     sendStatusForGame("Inbound");
@@ -159,7 +162,7 @@ class FlexDataHandler {
           }  
       }else if(_ringstate ==  RingState::Outbound){
           if(StateArr[0]!=999 && StateArr[1]!=999 ){
-                if(StateArr[0]<1200 && StateArr[0]>850){
+                if(StateArr[0]<1300 && StateArr[0]>900){
                     //trigger outbound
                     _ringstate = RingState::Normal;
                     sendStatusForGame("outBoundIn");
@@ -168,7 +171,7 @@ class FlexDataHandler {
           }  
       }else if(_ringstate ==  RingState::Inbound){
           if(StateArr[0]!=999 && StateArr[1]!=999 ){
-                if(StateArr[0]<1200 && StateArr[0]>850){
+                if(StateArr[0]<1300 && StateArr[0]>900){
                     //trigger outbound
                     _ringstate = RingState::Normal;
                     sendStatusForGame("InboundOut");
