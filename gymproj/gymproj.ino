@@ -49,13 +49,12 @@ String gameHostId ="";
 void setup() {
   Wire.begin();
   WifiConnectInit();
-  Serial.begin(115200);
   MPU6050_Init();
   DisplayInit();
   irrecv.enableIRIn();
   pinMode(35, INPUT_PULLUP);
   delay(100);
-    Serial.println("ss");
+  Serial.begin(115200);
 }
 
 
@@ -88,10 +87,11 @@ void loop() {
     }
   } else if (state == InGameMode) {
     DisplayDrawContent("Gaming");
-    GetGyroscopeData();
     handleSensorData();
+    
   }
-
+  GetGyroscopeData();
+  handleSensorData();
   if (socketState != WaitForFirstConnect && socketState != WaitForWifi) {
     client.poll();
   }
