@@ -49,12 +49,19 @@ String gameHostId ="";
 void setup() {
   Wire.begin();
   WifiConnectInit();
-  MPU6050_Init();
   DisplayInit();
   irrecv.enableIRIn();
   pinMode(35, INPUT_PULLUP);
   delay(100);
   Serial.begin(115200);
+
+    /*
+    Serial.println(F("\nSend any character to begin DMP programming and demo: "));
+    while (Serial.available() && Serial.read()); // empty buffer
+    while (!Serial.available());                 // wait for data
+    while (Serial.available() && Serial.read()); // empty buffer again
+    */
+    MPU6050_Init();
 }
 
 

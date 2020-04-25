@@ -143,16 +143,17 @@ class FlexDataHandler {
       StateArr[0] = flexValue32.getValue();
       StateArr[1] = flexValue32.getValue();
 
+    
       if(_ringstate == RingState::Normal){
           if(StateArr[0]!=999 && StateArr[1]!=999 ){
-                if(StateArr[0]>1300){
+                if(StateArr[0]>1000){
                     //trigger outbound
                     _ringstate = RingState::Outbound;
                     sendStatusForGame("Outbound");
-                    //Serial.print("\n  ---  Outbound --- \n");
-                }else if(StateArr[0]<900){  
+                    Serial.print("\n  ---  Outbound --- \n");
+                }else if(StateArr[0]<700){  
                     _ringstate = RingState::Inbound;
-                    //Serial.print("\n  ---  Inbound --- \n");
+                    Serial.print("\n  ---  Inbound --- \n");
                     sendStatusForGame("Inbound");
                 }else{
                   
@@ -160,20 +161,20 @@ class FlexDataHandler {
           }  
       }else if(_ringstate ==  RingState::Outbound){
           if(StateArr[0]!=999 && StateArr[1]!=999 ){
-                if(StateArr[0]<1300 && StateArr[0]>900){
+                if(StateArr[0]<1000 && StateArr[0]>700){
                     //trigger outbound
                     _ringstate = RingState::Normal;
                     sendStatusForGame("outBoundIn");
-                    //Serial.print("\n  ---  Normal --- \n");
+                    Serial.print("\n  ---  Normal --- \n");
                 }
           }  
       }else if(_ringstate ==  RingState::Inbound){
           if(StateArr[0]!=999 && StateArr[1]!=999 ){
-                if(StateArr[0]<1300 && StateArr[0]>900){
+                if(StateArr[0]<1000 && StateArr[0]>700){
                     //trigger outbound
                     _ringstate = RingState::Normal;
                     sendStatusForGame("InboundOut");
-                    //Serial.print("\n  ---  Normal --- \n");
+                    Serial.print("\n  ---  Normal --- \n");
                 }
           }  
       }
