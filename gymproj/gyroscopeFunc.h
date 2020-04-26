@@ -91,11 +91,12 @@ void MPU6050_Init(){
     pinMode(LED_PIN, OUTPUT);
 }
 
-
+void sendGyroscopeStatusForGame(String _status, String _time){
+      client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"yawData\":\""+_status+"\",\"rollDataTime\":\""+_time+"\"}");
+}
 
 long crtClockForGyroscope = 0; 
 long lastClockForGyroscope = 0; 
-
 bool startConfig;
 
 void GetGyroscopeData(){
@@ -152,7 +153,7 @@ void GetGyroscopeData(){
             mpu.dmpGetQuaternion(&q, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            double angle= ((double)gz)*(crtClockForGyroscope-lastClockForGyroscope) / 10000.0;
+            double angle= ((double)gz)*(crtClockForGyroscope-lastClockForGyroscope) / 5000.0;
             int dl = (int)round(angle);
             Serial.print("angle :");
             Serial.print(dl);
@@ -165,6 +166,10 @@ void GetGyroscopeData(){
             Serial.print("\t");
             Serial.println(ypr[2] * 180/M_PI);
             */
+            if(dl>5 || dl<-5){
+                double _deltaTime = (crtClockForGyroscope-lastClockForGyroscope)/1000;
+                sendGyroscopeStatusForGame(String(dl),String(_deltaTime));
+            }
             lastClockForGyroscope = crtClockForGyroscope;
      }
      blinkState = !blinkState;
@@ -175,5 +180,8 @@ void GetGyroscopeData(){
 
    
 }
+
+
+
 
 #endif
