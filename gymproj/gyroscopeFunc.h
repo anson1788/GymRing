@@ -77,7 +77,7 @@ void initI2Cdev(){
 }
 
 void MPU6050_Init(){
-    initI2Cdev();
+      initI2Cdev();
 }
 
 void sendGyroscopeStatusForGame(String _status, String _time){
@@ -90,74 +90,44 @@ bool startConfig;
 
 void GetGyroscopeData(){
 
-    
-    crtClockForGyroscope = millis();
+    int16_t ax, ay, az;
+    int16_t gx, gy, gz;
+    ax = ay = az = gx = gy = gz = -999;
+    boolean mpuDataReady = false;
 
-
-    // wait for MPU interrupt or extra packet(s) available
     while (!mpuInterrupt && fifoCount < packetSize) {
         if (mpuInterrupt && fifoCount < packetSize) {
-          // try to get out of the infinite loop 
           fifoCount = mpu.getFIFOCount();
         }  
     }
 
-    // reset interrupt flag and get INT_STATUS byte
     mpuInterrupt = false;
     mpuIntStatus = mpu.getIntStatus();
 
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
-    if(fifoCount < packetSize){
-            //Lets go back and wait for another interrupt. We shouldn't be here, we got an interrupt from another event
-        // This is blocking so don't do it   while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
-    }
-    // check for overflow (this should never happen unless our code is too inefficient)
-    else if ((mpuIntStatus & _BV(MPU6050_INTERRUPT_FIFO_OFLOW_BIT)) || fifoCount >= 1024) {
-        // reset so we can continue cleanly
+    if ((mpuIntStatus & _BV(MPU6050_INTERRUPT_FIFO_OFLOW_BIT)) || fifoCount >= 1024) {
         mpu.resetFIFO();
-      //  fifoCount = mpu.getFIFOCount();  // will be zero after reset no need to ask
         Serial.println(F("FIFO overflow!"));
-
-    // otherwise, check for DMP data ready interrupt (this should happen frequently)
     } else if (mpuIntStatus & _BV(MPU6050_INTERRUPT_DMP_INT_BIT)) {
 
-     // read a packet from FIFO
-    while(fifoCount >= packetSize){ // Lets catch up to NOW, someone is using the dreaded delay()!
-      mpu.getFIFOBytes(fifoBuffer, packetSize);
-      // track FIFO count here in case there is > 1 packet available
-      // (this lets us immediately read more without waiting for an interrupt)
-      fifoCount -= packetSize;
-    }
-
-
-    int16_t ax, ay, az;
-    int16_t gx, gy, gz;
-    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-   
-    if(crtClockForGyroscope-lastClockForGyroscope >100){
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            double angle= ((double)gz)*(crtClockForGyroscope-lastClockForGyroscope) / 5000.0;
-            int dl = (int)round(angle);
-            Serial.print("angle :");
-            Serial.print(dl);
-            Serial.print("\n");
-        
-            if(dl>5 || dl<-5){
-                double _deltaTime = (crtClockForGyroscope-lastClockForGyroscope)/1000;
-                sendGyroscopeStatusForGame(String(dl),String(_deltaTime));
-            }
-            lastClockForGyroscope = crtClockForGyroscope;
-     }
-   
+        while(fifoCount >= packetSize){ 
+          mpu.getFIFOBytes(fifoBuffer, packetSize);
+          fifoCount -= packetSize;
+        }
+        mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+        mpuDataReady = true;
    }
-  
 
+
+    crtClockForGyroscope = millis();   
+    if(crtClockForGyroscope-lastClockForGyroscope >100){
+        lastClockForGyroscope = crtClockForGyroscope;
+    }
 
    
 }
+
 
 
 
