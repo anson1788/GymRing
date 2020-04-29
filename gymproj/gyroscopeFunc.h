@@ -4,7 +4,6 @@
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 #define INTERRUPT_PIN 2  // use pin 2 on Arduino Uno & most boards
-#define LED_PIN 22 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 #define SDA 21
 #define SCL 22
 #define OUTPUT_READABLE_YAWPITCHROLL
@@ -12,10 +11,8 @@
 MPU6050 mpu;
 const int MPU_addr=0x68; 
 
-bool blinkState = false;
 bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
-uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
@@ -35,7 +32,7 @@ void dmpDataReady() {
 }
 
 
-void MPU6050_Init(){
+void initI2Cdev(){
     Wire.begin(SDA, SCL, 400000);
     while (!Serial);
     Serial.println(F("Initializing I2C devices..."));
@@ -43,9 +40,8 @@ void MPU6050_Init(){
     pinMode(INTERRUPT_PIN, INPUT_PULLUP);
     Serial.println(F("Initializing DMP..."));
     Serial.println(F("\nSend any character to begin DMP programming and demo: "));
+    mpu.dmpInitialize();
 
-    devStatus = mpu.dmpInitialize();
-    Serial.print(devStatus);
   
     mpu.setXAccelOffset(-911); 
     mpu.setYAccelOffset(356); 
@@ -55,8 +51,7 @@ void MPU6050_Init(){
     mpu.setZGyroOffset(-127);
     
 
-    if (devStatus == 0) {
-        // Calibration Time: generate offsets and calibrate our MPU6050
+    // Calibration Time: generate offsets and calibrate our MPU6050
         mpu.CalibrateAccel(6);
         mpu.CalibrateGyro(6);
         mpu.PrintActiveOffsets();
@@ -77,18 +72,11 @@ void MPU6050_Init(){
 
         // get expected DMP packet size for later comparison
         packetSize = mpu.dmpGetFIFOPacketSize();
-    } else {
-        // ERROR!
-        // 1 = initial memory load failed
-        // 2 = DMP configuration updates failed
-        // (if it's going to break, usually the code will be 1)
-        Serial.print(F("DMP Initialization failed (code "));
-        Serial.print(devStatus);
-        Serial.println(F(")"));
-    }
-    
-    // configure LED for output
-    pinMode(LED_PIN, OUTPUT);
+
+}
+
+void MPU6050_Init(){
+    initI2Cdev();
 }
 
 void sendGyroscopeStatusForGame(String _status, String _time){
@@ -140,15 +128,12 @@ void GetGyroscopeData(){
       // (this lets us immediately read more without waiting for an interrupt)
       fifoCount -= packetSize;
     }
-    
+
+
     int16_t ax, ay, az;
     int16_t gx, gy, gz;
     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    /*
-    Serial.print("gz : ");
-    Serial.print(gz);
-    Serial.print("\n");
-    */
+   
     if(crtClockForGyroscope-lastClockForGyroscope >100){
             mpu.dmpGetQuaternion(&q, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
@@ -158,22 +143,14 @@ void GetGyroscopeData(){
             Serial.print("angle :");
             Serial.print(dl);
             Serial.print("\n");
-            /*
-            Serial.print("ypr\t");
-            Serial.print(ypr[0] * 180/M_PI);
-            Serial.print("\t");
-            Serial.print(ypr[1] * 180/M_PI);
-            Serial.print("\t");
-            Serial.println(ypr[2] * 180/M_PI);
-            */
+        
             if(dl>5 || dl<-5){
                 double _deltaTime = (crtClockForGyroscope-lastClockForGyroscope)/1000;
                 sendGyroscopeStatusForGame(String(dl),String(_deltaTime));
             }
             lastClockForGyroscope = crtClockForGyroscope;
      }
-     blinkState = !blinkState;
-     digitalWrite(LED_PIN, blinkState);
+   
    }
   
 

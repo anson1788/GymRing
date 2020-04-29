@@ -150,10 +150,10 @@ class FlexDataHandler {
                     //trigger outbound
                     _ringstate = RingState::Outbound;
                     sendStatusForGame("Outbound");
-                    Serial.print("\n  ---  Outbound --- \n");
+                   // Serial.print("\n  ---  Outbound --- \n");
                 }else if(StateArr[0]<700){  
                     _ringstate = RingState::Inbound;
-                    Serial.print("\n  ---  Inbound --- \n");
+                   // Serial.print("\n  ---  Inbound --- \n");
                     sendStatusForGame("Inbound");
                 }else{
                   
@@ -165,7 +165,7 @@ class FlexDataHandler {
                     //trigger outbound
                     _ringstate = RingState::Normal;
                     sendStatusForGame("outBoundIn");
-                    Serial.print("\n  ---  Normal --- \n");
+                   // Serial.print("\n  ---  Normal --- \n");
                 }
           }  
       }else if(_ringstate ==  RingState::Inbound){
@@ -174,7 +174,7 @@ class FlexDataHandler {
                     //trigger outbound
                     _ringstate = RingState::Normal;
                     sendStatusForGame("InboundOut");
-                    Serial.print("\n  ---  Normal --- \n");
+                    //Serial.print("\n  ---  Normal --- \n");
                 }
           }  
       }
