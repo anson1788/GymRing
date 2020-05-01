@@ -42,11 +42,13 @@ int timerCounter = 0;
 String gameHostId ="";
 
 GyroscopeNetworkClass gyroscopeNetworkData;
+FlexNetworkClass flexNetworkData;
+
 
 #include "gyroscopeFunc.h"
 #include "displayFunc.h"
 #include "networkFunc.h"
-#include "flexSensor.h"
+#include "flexFunc.h"
 void setup() {
   Wire.begin();
   WifiConnectInit();
@@ -95,8 +97,9 @@ void loop() {
     }
   } else if (state == InGameMode) {
     DisplayDrawContent("Gaming");
-    handleSensorData();
+    GetFlexData();
     GetGyroscopeData();
+    checkSendNetworkData();
   }
   if (socketState != WaitForFirstConnect && socketState != WaitForWifi) {
     client.poll();
@@ -108,26 +111,11 @@ void loop() {
 
 
 
-
-FlexDataHandler flexHandler;
-void handleSensorData() {
-  int potValue = analogRead(35);
-  int potValue32 = analogRead(32);
-  flexHandler.processData(potValue, potValue32);
-
-  /*
-    Serial.print("step 10 monitor \n");
-    Serial.print(potValue32);
-    Serial.print("---\n");
-  */
-  /*
-    if(abs(lastVal-flexValue.getValue())>50){
-    Serial.print("------------------------------------------------------ \n");
-    Serial.print(flexValue.getValue());
-    Serial.print("-------------------------------------------------------- \n");
-    lastVal = flexValue.getValue();
-    }
-  */
+void checkSendNetworkData(){
+   if( flexNetworkData.dataIsSent == false){
+      client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"flexPercentage\":\""+flexNetworkData.flexPercentage+"\",\"flexDataTime\":\""+flexNetworkData.animDuration+"\"}");
+      flexNetworkData.dataIsSent = true;
+   }
 }
 
 

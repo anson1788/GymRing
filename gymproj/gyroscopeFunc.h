@@ -191,14 +191,15 @@ void GetGyroscopeData(){
                 if(lastRoll!=-999 && abs(lastRoll-rollAngle) > 120){
                      ringMotionStatus = MotionStatus::requestCalibration;
                 }
-                
+
+                /*
                 Serial.print("ypr\t");
                 Serial.print(yawAngle);
                 Serial.print("\t");
                 Serial.print(pitchAngle);
                 Serial.print("\t");
                 Serial.println(ypr[2] * 180/M_PI);
-
+                */
                 
                 float timeDiff = (float)(crtClockForGyroscope-lastClockForGyroscope)/1000;
                 //sendGyroscopeStatusForGame(String(yawAngle) ,String(pitchAngle),String(timeDiff));
