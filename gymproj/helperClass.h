@@ -132,4 +132,29 @@ class SmoothValueFlexInt{
 };
 
 
+class GyroscopeNetworkClass{
+	public:
+	    long lastClockForGyroscope;
+		  String yawAngle;
+		  String pitchAngle;
+		  String rollAngle;
+		  String animDuration;
+		  float dataIsSent = true;
+			
+		
+};
+
+
+class FlexNetworkClass{
+  public:
+      long lastClockForFlex;
+      String flexPercentage;
+      String animDuration;
+      float dataIsSent = true;
+      
+    
+};
+
+
+
 #endif

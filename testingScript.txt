@@ -14,3 +14,9 @@ response
 
 
 {"action":"InGameType","type":"startGame","sender":"","roomid":"3248"}
+
+
+
+{"action":"InGameType","type":"ringData","sender":"sensor1","gamehost":"gameHostId","calibratingFlag":"false"}
+
+{"action":"InGameType","type":"ringData","sender":"sensor1","gamehost":"gameHostId","calibratingFlag":"true"}

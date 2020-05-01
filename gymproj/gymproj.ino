@@ -41,6 +41,7 @@ String roomId = "";
 int timerCounter = 0;
 String gameHostId ="";
 
+GyroscopeNetworkClass gyroscopeNetworkData;
 
 #include "gyroscopeFunc.h"
 #include "displayFunc.h"

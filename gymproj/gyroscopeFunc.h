@@ -78,11 +78,19 @@ void initI2Cdev(){
 }
 
 void MPU6050_Init(){
-      initI2Cdev();
+    initI2Cdev();
 }
 
 void sendGyroscopeStatusForGame(String yawData, String pitchData, String _time){
-      client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"yawData\":\""+yawData+"\",\"pitchData\":\""+pitchData+"\",\"rollDataTime\":\""+_time+"\"}");
+    client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"yawData\":\""+yawData+"\",\"pitchData\":\""+pitchData+"\",\"rollDataTime\":\""+_time+"\"}");
+}
+
+void sendRequestCalibration(bool isData){
+	String value = "false";
+	if(isData){
+		value = "true";
+	}
+    client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"calibratingFlag\":\""+value+"\"}");	
 }
 
 long crtClockForGyroscope = 0; 
@@ -95,15 +103,9 @@ MotionStatus ringMotionStatus = requestCalibration;
 
 float lastYaw = -999;
 float lastPitch = -999;
+float lastRoll = -999;
 
-void GetGyroscopeData(){
-
-    crtClockForGyroscope = millis();   
-    if(crtClockForGyroscope-lastClockForGyroscope <100){
-      return;
-    }
-
-    if(ringMotionStatus == MotionStatus::requestCalibration){
+void calibratingForMPU(){
         ringMotionStatus = MotionStatus::calibrating;
         mpu.resetFIFO();
         mpu.initialize();
@@ -133,6 +135,20 @@ void GetGyroscopeData(){
         ringMotionStatus = MotionStatus::detecting;
         lastYaw = -999;
         lastPitch = -999;
+}
+
+
+void GetGyroscopeData(){
+
+    crtClockForGyroscope = millis();   
+    if(crtClockForGyroscope-lastClockForGyroscope <100){
+      return;
+    }
+
+    if(ringMotionStatus == MotionStatus::requestCalibration){
+    		sendRequestCalibration(true);
+    		calibratingForMPU();
+    		sendRequestCalibration(false);
     }else{
       
           int16_t ax, ay, az;
@@ -164,23 +180,39 @@ void GetGyroscopeData(){
                 mpu.dmpGetGravity(&gravity, &q);
                 mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
                 float yawAngle =ypr[0] * 180/M_PI;
-                float pitchData = ypr[1] * 180/M_PI;
+                float pitchAngle = ypr[1] * 180/M_PI;
+                float rollAngle = ypr[2] * 180/M_PI;
                 if(lastYaw!=-999 && abs(lastYaw-yawAngle) > 120){
                      ringMotionStatus = MotionStatus::requestCalibration;
                 }
-                if(lastPitch!=-999 && abs(lastPitch-pitchData) > 120){
+                if(lastPitch!=-999 && abs(lastPitch-pitchAngle) > 120){
                      ringMotionStatus = MotionStatus::requestCalibration;
                 }
+                if(lastRoll!=-999 && abs(lastRoll-rollAngle) > 120){
+                     ringMotionStatus = MotionStatus::requestCalibration;
+                }
+                
                 Serial.print("ypr\t");
                 Serial.print(yawAngle);
                 Serial.print("\t");
-                Serial.print(pitchData);
+                Serial.print(pitchAngle);
                 Serial.print("\t");
                 Serial.println(ypr[2] * 180/M_PI);
+
+                
                 float timeDiff = (float)(crtClockForGyroscope-lastClockForGyroscope)/1000;
-                sendGyroscopeStatusForGame(String(yawAngle) ,String(pitchData),String(timeDiff));
+                //sendGyroscopeStatusForGame(String(yawAngle) ,String(pitchAngle),String(timeDiff));
+                
+                gyroscopeNetworkData.dataIsSent = false;
+                gyroscopeNetworkData.yawAngle = String(yawAngle);
+                gyroscopeNetworkData.pitchAngle = String(pitchAngle);
+                gyroscopeNetworkData.rollAngle  = String(rollAngle);
+                gyroscopeNetworkData.animDuration = String(timeDiff);
+                gyroscopeNetworkData.lastClockForGyroscope = crtClockForGyroscope;
+                
                 lastYaw = yawAngle;
-                lastPitch = pitchData;
+                lastPitch = pitchAngle;
+                lastRoll = rollAngle;
          }
     }
    
