@@ -8,9 +8,11 @@ long crtClockForFlex = -999;
 long lastClockForFlex = -999; 
 
 void GetFlexData(){
-  int potValue = analogRead(35);
-  int potValue32 = analogRead(32);
-
+ // int potValue = analogRead(35);
+  int potValue32 = analogRead(35);
+   Serial.print("pot data ");
+   Serial.print(potValue32);
+   Serial.print("\n");
   if(lastFlex32Val = -999){
       lastFlex32Val = potValue32;
   }else{
@@ -33,18 +35,18 @@ void GetFlexData(){
       // 700 /1000 500
 
        float calVal = (float)lastFlex32Val;
-       float limit = 200;
-       if(lastFlex32Val > 750){
+       float limit = 300;
+       if(lastFlex32Val > 1200){
           limit=300;
        }
-       if(lastFlex32Val>1000){
-          calVal = 1000;
+       if(lastFlex32Val>1400){
+          calVal = 1400;
        }
-       if(lastFlex32Val<500){
-          calVal = 500; 
+       if(lastFlex32Val<850){
+          calVal = 850; 
        }
 
-       float flexPercentage = 1+((lastFlex32Val-700)/limit)*0.2;
+       float flexPercentage = 1+((lastFlex32Val-1100)/limit)*0.2;
 
        if(flexPercentage>1.3){
          flexPercentage= 1.3;

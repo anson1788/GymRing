@@ -112,9 +112,41 @@ void loop() {
 
 
 void checkSendNetworkData(){
+   String flexData = "";
+   String mpu3060Data = "";
    if( flexNetworkData.dataIsSent == false){
-      client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"flexPercentage\":\""+flexNetworkData.flexPercentage+"\",\"flexDataTime\":\""+flexNetworkData.animDuration+"\"}");
+      flexData = "\"flexPercentage\":\""+flexNetworkData.flexPercentage+"\""; 
+      flexData += ",\"flexDataTime\":\""+flexNetworkData.animDuration+"\""; 
+      //client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"flexPercentage\":\""+flexNetworkData.flexPercentage+"\",\"flexDataTime\":\""+flexNetworkData.animDuration+"\"}");
       flexNetworkData.dataIsSent = true;
+   }
+
+   if( gyroscopeNetworkData.dataIsSent == false){
+      mpu3060Data = "\"yawData\":\""+gyroscopeNetworkData.yawAngle+"\""; 
+      mpu3060Data += ",\"pitchData\":\""+gyroscopeNetworkData.pitchAngle+"\""; 
+      mpu3060Data += ",\"rollData\":\""+gyroscopeNetworkData.rollAngle+"\""; 
+      mpu3060Data += ",\"mpuDataTime\":\""+gyroscopeNetworkData.animDuration+"\""; 
+      //client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"flexPercentage\":\""+flexNetworkData.flexPercentage+"\",\"flexDataTime\":\""+flexNetworkData.animDuration+"\"}");
+      gyroscopeNetworkData.dataIsSent = true;
+   }
+
+   if(mpu3060Data!="" || flexData !=""){
+      String networkData = "";
+      networkData += "{\"action\":\"InGameType\"";
+      networkData += ",\"type\":\"ringData\"";
+      networkData += ",\"sender\":\"sensor1\"";    
+      networkData += ",\"gamehost\":\""+gameHostId+"\"";   
+      if(flexData!=""){   
+        networkData += ","+flexData;         
+      }
+      if(mpu3060Data!=""){   
+        networkData += ","+mpu3060Data;         
+      }
+      networkData += "}";
+      Serial.print(" data ");
+      Serial.print(networkData);
+      Serial.print(" \n ");
+      client.send(networkData);
    }
 }
 
