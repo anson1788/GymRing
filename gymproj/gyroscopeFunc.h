@@ -2,7 +2,6 @@
 #define gyroscopeFunc_h
 
 #include "I2Cdev.h"
-#include <MadgwickAHRS.h>
 #include "MPU6050_6Axis_MotionApps20.h"
 #define INTERRUPT_PIN 2  // use pin 2 on Arduino Uno & most boards
 #define SDA 21
@@ -10,7 +9,7 @@
 #define OUTPUT_READABLE_YAWPITCHROLL
 #include <Math.h>
 MPU6050 mpu;
-const int MPU_addr=0x68; 
+
 
 
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
@@ -31,6 +30,7 @@ volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin h
 void dmpDataReady() {
     mpuInterrupt = true;
 }
+
 
 
 void initI2Cdev(){
@@ -82,7 +82,7 @@ void MPU6050_Init(){
 }
 
 void sendGyroscopeStatusForGame(String yawData, String pitchData, String _time){
-    client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"yawData\":\""+yawData+"\",\"pitchData\":\""+pitchData+"\",\"rollDataTime\":\""+_time+"\"}");
+  //  client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"yawData\":\""+yawData+"\",\"pitchData\":\""+pitchData+"\",\"rollDataTime\":\""+_time+"\"}");
 }
 
 void sendRequestCalibration(bool isData){
@@ -90,7 +90,7 @@ void sendRequestCalibration(bool isData){
 	if(isData){
 		value = "true";
 	}
-    client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"calibratingFlag\":\""+value+"\"}");	
+  //  client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"calibratingFlag\":\""+value+"\"}");	
 }
 
 long crtClockForGyroscope = 0; 
@@ -141,15 +141,11 @@ void calibratingForMPU(){
 void GetGyroscopeData(){
 
     crtClockForGyroscope = millis();   
-    if(crtClockForGyroscope-lastClockForGyroscope <100){
+    if(crtClockForGyroscope-lastClockForGyroscope <50){
       return;
     }
 
-    if(ringMotionStatus == MotionStatus::requestCalibration){
-    		sendRequestCalibration(true);
-    		calibratingForMPU();
-    		sendRequestCalibration(false);
-    }else{
+  
       
           int16_t ax, ay, az;
           int16_t gx, gy, gz;
@@ -215,7 +211,7 @@ void GetGyroscopeData(){
                 lastPitch = pitchAngle;
                 lastRoll = rollAngle;
          }
-    }
+   // }
    
 
    lastClockForGyroscope = crtClockForGyroscope;
