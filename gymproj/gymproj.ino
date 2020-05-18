@@ -100,12 +100,13 @@ void loop() {
   if(state == GameState::RequestCalibration){
       //GetGyroscopeData();
       GetFlexData();
-      checkSendNetworkData();
-      
       if(flexNetworkData.flexPercentage=="0.70"){
+        SerialBT.println("{\"action\":\"StartCalibrating\"}"); 
         calibratingForMPU();
+         SerialBT.println("{\"action\":\"CompleteCalibrating\"}"); 
         state = GameState::RequestCompleteAndStartMotionExchange;
       }else{
+        checkSendNetworkData();
         Serial.print(flexNetworkData.flexPercentage);
         Serial.print("\n");
       }
@@ -116,10 +117,6 @@ void loop() {
       checkSendNetworkData();
   } 
   DisplayDrawContent(getDisplayMsg());
-  //GetFlexData();
-  //GetGyroscopeData();
-  //delay(30);
-  
 
 }
 
@@ -132,6 +129,7 @@ void handleBlueToothMsg(String receivedMsg){
          state = GameState::RequestCalibration;
     }
 }
+
 String getDisplayMsg(){
   if(state == GameState::WaitForBLEConnect){
     return "waiting for BoothDeviceToConnect";
@@ -144,7 +142,7 @@ String getDisplayMsg(){
     return "Calibrating";
   } 
   if(state == GameState::RequestCompleteAndStartMotionExchange){
-    return "Calibration Complete, gaming";
+    return "Gaming";
   } 
   return "";
 }
