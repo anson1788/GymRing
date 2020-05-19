@@ -139,11 +139,6 @@ void calibratingForMPU(){
 
 
 void GetGyroscopeData(){
-
-    crtClockForGyroscope = millis();   
-    if(crtClockForGyroscope-lastClockForGyroscope >50){
-
-  
       
           int16_t ax, ay, az;
           int16_t gx, gy, gz;
@@ -186,34 +181,20 @@ void GetGyroscopeData(){
                      ringMotionStatus = MotionStatus::requestCalibration;
                 }
 
-                /*
-                Serial.print("ypr\t");
-                Serial.print(yawAngle);
-                Serial.print("\t");
-                Serial.print(pitchAngle);
-                Serial.print("\t");
-                Serial.println(ypr[2] * 180/M_PI);
-                */
+                
                 
                 float timeDiff = (float)(crtClockForGyroscope-lastClockForGyroscope)/1000;
-                //sendGyroscopeStatusForGame(String(yawAngle) ,String(pitchAngle),String(timeDiff));
                 
-                gyroscopeNetworkData.dataIsSent = false;
-                gyroscopeNetworkData.yawAngle = String(yawAngle);
-                gyroscopeNetworkData.pitchAngle = String(pitchAngle);
-                gyroscopeNetworkData.rollAngle  = String(rollAngle);
-                gyroscopeNetworkData.animDuration = String(timeDiff);
-                gyroscopeNetworkData.lastClockForGyroscope = crtClockForGyroscope;
+                mNetworkData.dataIsSent = false;
+                mNetworkData.yawAngle = String(yawAngle);
+                mNetworkData.pitchAngle = String(pitchAngle);
+                mNetworkData.rollAngle  = String(rollAngle);
+
                 
                 lastYaw = yawAngle;
                 lastPitch = pitchAngle;
                 lastRoll = rollAngle;
          }
-
-   
-
-         lastClockForGyroscope = crtClockForGyroscope;
-   }
 
 }
 

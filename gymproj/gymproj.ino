@@ -34,28 +34,18 @@ int timerCounter = 0;
 String gameHostId ="";
 
 
-class GyroscopeNetworkClass{
+class NetworkClass{
   public:
-      long lastClockForGyroscope;
-      String yawAngle;
-      String pitchAngle;
-      String rollAngle;
-      String animDuration;
+      String yawAngle="-999";
+      String pitchAngle="-999";
+      String rollAngle="-999";
+      String flexPercentage="1.0";
       bool dataIsSent = true;    
 };
 
-class FlexNetworkClass{
-  public:
-      long lastClockForFlex;
-      String flexPercentage;
-      String animDuration;
-      bool dataIsSent = true;
 
-};
+NetworkClass mNetworkData;
 
-
-GyroscopeNetworkClass gyroscopeNetworkData;
-FlexNetworkClass flexNetworkData;
 
 #include "gyroscopeFunc.h"
 #include "displayFunc.h"
@@ -98,26 +88,43 @@ void loop() {
     handleBlueToothMsg(receivedMsg);
   }
   if(state == GameState::RequestCalibration){
-      //GetGyroscopeData();
-      GetFlexData();
-      if(flexNetworkData.flexPercentage=="0.70"){
+      handleSensorData();
+      if(mNetworkData.flexPercentage=="0.70"){
         SerialBT.println("{\"action\":\"StartCalibrating\"}"); 
         calibratingForMPU();
-         SerialBT.println("{\"action\":\"CompleteCalibrating\"}"); 
+        SerialBT.println("{\"action\":\"CompleteCalibrating\"}"); 
         state = GameState::RequestCompleteAndStartMotionExchange;
       }else{
         checkSendNetworkData();
-        Serial.print(flexNetworkData.flexPercentage);
+        Serial.print(mNetworkData.flexPercentage);
         Serial.print("\n");
       }
   } 
   if(state == GameState::RequestCompleteAndStartMotionExchange){
-      GetGyroscopeData();
-      GetFlexData();
+      handleSensorData();
       checkSendNetworkData();
   } 
   DisplayDrawContent(getDisplayMsg());
 
+}
+
+long crtClockForMultipleSensor = -999; 
+long lastClockForMultipleSensor = -999; 
+
+void handleSensorData(){
+    updateFlexValue();
+    crtClockForMultipleSensor = millis();   
+    if(lastClockForMultipleSensor == -999){
+      lastClockForMultipleSensor = crtClockForMultipleSensor;
+    }
+    
+    if(crtClockForMultipleSensor-lastClockForMultipleSensor > 60){
+      GetFlexData();
+      if(state == GameState::RequestCompleteAndStartMotionExchange){
+        GetGyroscopeData();
+      }
+      lastClockForMultipleSensor = crtClockForMultipleSensor;
+    }
 }
 
 void handleBlueToothMsg(String receivedMsg){
@@ -148,36 +155,24 @@ String getDisplayMsg(){
 }
 
 void checkSendNetworkData(){
+   String networkDataMsg = "";
    String flexData = "";
    String mpu3060Data = "";
-   if( flexNetworkData.dataIsSent == false){
-      flexData = "\"flexPercentage\":\""+flexNetworkData.flexPercentage+"\""; 
-      flexData += ",\"flexDataTime\":\""+flexNetworkData.animDuration+"\""; 
-      //client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"flexPercentage\":\""+flexNetworkData.flexPercentage+"\",\"flexDataTime\":\""+flexNetworkData.animDuration+"\"}");
-      flexNetworkData.dataIsSent = true;
+   if( mNetworkData.dataIsSent == false){
+      networkDataMsg = "\"flexPercentage\":\""+mNetworkData.flexPercentage+"\""; 
+      networkDataMsg += ",\"yawData\":\""+mNetworkData.yawAngle+"\""; 
+      networkDataMsg += ",\"pitchData\":\""+mNetworkData.pitchAngle+"\""; 
+      networkDataMsg += ",\"rollData\":\""+mNetworkData.rollAngle+"\""; 
+      mNetworkData.dataIsSent = true;
    }
 
-   if( gyroscopeNetworkData.dataIsSent == false){
-      mpu3060Data = "\"yawData\":\""+gyroscopeNetworkData.yawAngle+"\""; 
-      mpu3060Data += ",\"pitchData\":\""+gyroscopeNetworkData.pitchAngle+"\""; 
-      mpu3060Data += ",\"rollData\":\""+gyroscopeNetworkData.rollAngle+"\""; 
-      mpu3060Data += ",\"mpuDataTime\":\""+gyroscopeNetworkData.animDuration+"\""; 
-      //client.send("{\"action\":\"InGameType\",\"type\":\"ringData\",\"sender\":\"sensor1\",\"gamehost\":\""+gameHostId+"\",\"flexPercentage\":\""+flexNetworkData.flexPercentage+"\",\"flexDataTime\":\""+flexNetworkData.animDuration+"\"}");
-      gyroscopeNetworkData.dataIsSent = true;
-   }
-
-   if(mpu3060Data!="" || flexData !=""){
+   if(networkDataMsg !=""){
       String networkData = "";
       networkData += "{\"action\":\"InGameType\"";
       networkData += ",\"type\":\"ringData\"";
       networkData += ",\"sender\":\"sensor1\"";    
       networkData += ",\"gamehost\":\""+gameHostId+"\"";   
-      if(flexData!=""){   
-        networkData += ","+flexData;         
-      }
-      if(mpu3060Data!=""){   
-        networkData += ","+mpu3060Data;         
-      }
+      networkData += ","+networkDataMsg;         
       networkData += "}";
       Serial.print(" data ");
       Serial.print(networkData);
@@ -185,4 +180,5 @@ void checkSendNetworkData(){
       SerialBT.println(networkData); 
       //client.send(networkData);
    }
+   
 }

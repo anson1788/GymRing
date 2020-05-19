@@ -7,34 +7,18 @@ int lastFlex32Val = -999;
 long crtClockForFlex = -999; 
 long lastClockForFlex = -999; 
 
-void GetFlexData(){
- // int potValue = analogRead(35);
+
+void updateFlexValue(){
   int potValue32 = analogRead(35);
-  /*
-   Serial.print("pot data ");
-   Serial.print(potValue32);
-   Serial.print("\n");
-   */
   if(lastFlex32Val = -999){
       lastFlex32Val = potValue32;
   }else{
       lastFlex32Val = lastFlex32Val*0.5 + potValue32*0.5;
   }
 
-  crtClockForFlex = millis();   
+}
 
-  if(lastClockForFlex == -999){
-    lastClockForFlex = crtClockForFlex;
-  }
-
-  if(crtClockForFlex-lastClockForFlex > 50){
-      /*
-        long lastClockForFlex;
-        String flexPercentage;
-        String animDuration;
-        float dataIsSent = true;
-       */
-      // 700 /1000 500
+void GetFlexData(){
 
        float calVal = (float)lastFlex32Val;
        float limit = 300;
@@ -56,22 +40,12 @@ void GetFlexData(){
        if(flexPercentage<0.7){
          flexPercentage= 0.7;
        }
-
        /*
-       Serial.print("flex data");
-       Serial.print(lastFlex32Val);
-       Serial.print("----");
-       Serial.print(flexPercentage);
-       Serial.print("\n");
-      */
       float timeDiff = (float)(crtClockForFlex-lastClockForFlex)/1000;
-      flexNetworkData.dataIsSent = false;
-      flexNetworkData.lastClockForFlex = crtClockForFlex;
-      flexNetworkData.animDuration = String(timeDiff);
-      flexNetworkData.flexPercentage= String(flexPercentage);
-      lastClockForFlex = crtClockForFlex;
-  }
-  
+      */
+      mNetworkData.dataIsSent = false;
+      mNetworkData.flexPercentage= String(flexPercentage);
+      
 }
 
 #endif
