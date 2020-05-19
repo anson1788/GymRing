@@ -141,9 +141,7 @@ void calibratingForMPU(){
 void GetGyroscopeData(){
 
     crtClockForGyroscope = millis();   
-    if(crtClockForGyroscope-lastClockForGyroscope <50){
-      return;
-    }
+    if(crtClockForGyroscope-lastClockForGyroscope >50){
 
   
       
@@ -211,10 +209,12 @@ void GetGyroscopeData(){
                 lastPitch = pitchAngle;
                 lastRoll = rollAngle;
          }
-   // }
+
    
 
-   lastClockForGyroscope = crtClockForGyroscope;
+         lastClockForGyroscope = crtClockForGyroscope;
+   }
+
 }
 
 
