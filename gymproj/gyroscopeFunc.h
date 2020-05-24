@@ -24,7 +24,8 @@ VectorInt16 aaReal;
 VectorInt16 aaWorld;    
 VectorFloat gravity;    
 float euler[3];         
-float ypr[3];           
+float ypr[3];   
+  
 
 volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
 void dmpDataReady() {
@@ -104,8 +105,13 @@ MotionStatus ringMotionStatus = requestCalibration;
 float lastYaw = -999;
 float lastPitch = -999;
 float lastRoll = -999;
-
+int xSensorVal = 0;
+int x_S = -999;
+int xHighpass = 0;
+long xSendTime = -999;
+int valZ = 0;
 void calibratingForMPU(){
+        x_S = -999;
         ringMotionStatus = MotionStatus::calibrating;
         mpu.resetFIFO();
         mpu.initialize();
@@ -138,11 +144,10 @@ void calibratingForMPU(){
 }
 
 
+
 void GetGyroscopeData(){
       
-          int16_t ax, ay, az;
-          int16_t gx, gy, gz;
-          ax = ay = az = gx = gy = gz = -999;
+         
           while (!mpuInterrupt && fifoCount < packetSize) {
               if (mpuInterrupt && fifoCount < packetSize) {
                 fifoCount = mpu.getFIFOCount();
@@ -166,8 +171,10 @@ void GetGyroscopeData(){
                 fifoCount -= packetSize;
               }
                 mpu.dmpGetQuaternion(&q, fifoBuffer);
+                mpu.dmpGetAccel(&aa, fifoBuffer);
                 mpu.dmpGetGravity(&gravity, &q);
                 mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+                mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
                 float yawAngle =ypr[0] * 180/M_PI;
                 float pitchAngle = ypr[1] * 180/M_PI;
                 float rollAngle = ypr[2] * 180/M_PI;
@@ -181,9 +188,24 @@ void GetGyroscopeData(){
                      ringMotionStatus = MotionStatus::requestCalibration;
                 }
 
-                
-                
-                float timeDiff = (float)(crtClockForGyroscope-lastClockForGyroscope)/1000;
+         
+                //Serial.print(aaReal.x);
+                //Serial.print(" ");
+
+                if(x_S == -999){
+                    x_S = aaReal.x;
+                }else{
+                    xSensorVal = aaReal.x;       
+                    x_S = (0.3*xSensorVal) + ((1-0.3)*x_S);
+                    xHighpass = xSensorVal - x_S;  
+                }
+                valZ = aaReal.z;
+               
+                /*
+                Serial.print(aaReal.y);
+                Serial.print("\t");
+                Serial.println(aaReal.z);
+                */
                 
                 mNetworkData.dataIsSent = false;
                 mNetworkData.yawAngle = String(yawAngle);

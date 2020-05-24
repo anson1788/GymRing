@@ -68,7 +68,7 @@ void setup() {
   Serial.begin(115200);
   
   MPU6050_Init();
-  
+  initFlex();
   SerialBT.begin("BLETEST"); 
   
 }
@@ -89,6 +89,7 @@ void loop() {
   }
   if(state == GameState::RequestCalibration){
       handleSensorData();
+      /*
       if(mNetworkData.flexPercentage=="0.70"){
         SerialBT.println("{\"action\":\"StartCalibrating\"}"); 
         calibratingForMPU();
@@ -98,11 +99,12 @@ void loop() {
         checkSendNetworkData();
         Serial.print(mNetworkData.flexPercentage);
         Serial.print("\n");
-      }
+      }*/
+      
   } 
   if(state == GameState::RequestCompleteAndStartMotionExchange){
       handleSensorData();
-      checkSendNetworkData();
+      //checkSendNetworkData();
   } 
   DisplayDrawContent(getDisplayMsg());
 
@@ -110,6 +112,8 @@ void loop() {
 
 long crtClockForMultipleSensor = -999; 
 long lastClockForMultipleSensor = -999; 
+
+long crtFlexSendTime = -999;
 
 void handleSensorData(){
     updateFlexValue();
@@ -119,9 +123,35 @@ void handleSensorData(){
     }
     
     if(crtClockForMultipleSensor-lastClockForMultipleSensor > 60){
-      GetFlexData();
+       if(state == GameState::RequestCalibration){
+          if(flexHighpass<-50 && crtClockForMultipleSensor-crtFlexSendTime>180){
+            SerialBT.println("{\"action\":\"StartCalibrating\"}"); 
+            crtFlexSendTime = crtClockForMultipleSensor;
+            calibratingForMPU();
+            SerialBT.println("{\"action\":\"CompleteCalibrating\"}"); 
+            state = GameState::RequestCompleteAndStartMotionExchange;
+          }
+       }else{
+         if(flexHighpass<-50 && crtClockForMultipleSensor-crtFlexSendTime>180){
+            crtFlexSendTime = crtClockForMultipleSensor;
+            mNetworkData.flexPercentage = 0.70;
+            mNetworkData.dataIsSent = false;
+            checkSendNetworkData();
+         }
+       }
+     
+
+      
       if(state == GameState::RequestCompleteAndStartMotionExchange){
         GetGyroscopeData();
+        if(xHighpass<-2000 && crtClockForMultipleSensor-xSendTime>180){
+           xSendTime = crtClockForMultipleSensor;
+           Serial.print(xHighpass);
+           Serial.print("\n");
+              Serial.print("VALZ :");
+           Serial.print(valZ);
+           Serial.print("\n");
+        }
       }
       lastClockForMultipleSensor = crtClockForMultipleSensor;
     }
@@ -160,9 +190,9 @@ void checkSendNetworkData(){
    String mpu3060Data = "";
    if( mNetworkData.dataIsSent == false){
       networkDataMsg = "\"flexPercentage\":\""+mNetworkData.flexPercentage+"\""; 
-      networkDataMsg += ",\"yawData\":\""+mNetworkData.yawAngle+"\""; 
-      networkDataMsg += ",\"pitchData\":\""+mNetworkData.pitchAngle+"\""; 
-      networkDataMsg += ",\"rollData\":\""+mNetworkData.rollAngle+"\""; 
+      //networkDataMsg += ",\"yawData\":\""+mNetworkData.yawAngle+"\""; 
+      //networkDataMsg += ",\"pitchData\":\""+mNetworkData.pitchAngle+"\""; 
+      //networkDataMsg += ",\"rollData\":\""+mNetworkData.rollAngle+"\""; 
       mNetworkData.dataIsSent = true;
    }
 
@@ -174,10 +204,12 @@ void checkSendNetworkData(){
       networkData += ",\"gamehost\":\""+gameHostId+"\"";   
       networkData += ","+networkDataMsg;         
       networkData += "}";
+      /*
       Serial.print(" data ");
       Serial.print(networkData);
       Serial.print(" \n ");
       SerialBT.println(networkData); 
+      */
       //client.send(networkData);
    }
    
