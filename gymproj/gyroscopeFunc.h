@@ -175,6 +175,7 @@ void GetGyroscopeData(){
                 mpu.dmpGetGravity(&gravity, &q);
                 mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
                 mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+                mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
                 float yawAngle =ypr[0] * 180/M_PI;
                 float pitchAngle = ypr[1] * 180/M_PI;
                 float rollAngle = ypr[2] * 180/M_PI;
@@ -193,13 +194,13 @@ void GetGyroscopeData(){
                 //Serial.print(" ");
 
                 if(x_S == -999){
-                    x_S = aaReal.x;
+                    x_S = yawAngle;
                 }else{
-                    xSensorVal = aaReal.x;       
+                    xSensorVal = yawAngle;       
                     x_S = (0.3*xSensorVal) + ((1-0.3)*x_S);
                     xHighpass = xSensorVal - x_S;  
                 }
-                valZ = aaReal.z;
+                valZ = pitchAngle;
                
                 /*
                 Serial.print(aaReal.y);

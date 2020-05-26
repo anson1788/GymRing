@@ -45,7 +45,7 @@ class NetworkClass{
 
 
 NetworkClass mNetworkData;
-
+NetworkClass mNetworkDataMotion;
 
 #include "gyroscopeFunc.h"
 #include "displayFunc.h"
@@ -87,24 +87,8 @@ void loop() {
     Serial.print("\n");
     handleBlueToothMsg(receivedMsg);
   }
-  if(state == GameState::RequestCalibration){
+  if(state == GameState::RequestCalibration || state == GameState::RequestCompleteAndStartMotionExchange){
       handleSensorData();
-      /*
-      if(mNetworkData.flexPercentage=="0.70"){
-        SerialBT.println("{\"action\":\"StartCalibrating\"}"); 
-        calibratingForMPU();
-        SerialBT.println("{\"action\":\"CompleteCalibrating\"}"); 
-        state = GameState::RequestCompleteAndStartMotionExchange;
-      }else{
-        checkSendNetworkData();
-        Serial.print(mNetworkData.flexPercentage);
-        Serial.print("\n");
-      }*/
-      
-  } 
-  if(state == GameState::RequestCompleteAndStartMotionExchange){
-      handleSensorData();
-      //checkSendNetworkData();
   } 
   DisplayDrawContent(getDisplayMsg());
 
@@ -144,14 +128,14 @@ void handleSensorData(){
       
       if(state == GameState::RequestCompleteAndStartMotionExchange){
         GetGyroscopeData();
-        if(xHighpass<-2000 && crtClockForMultipleSensor-xSendTime>180){
-           xSendTime = crtClockForMultipleSensor;
-           Serial.print(xHighpass);
-           Serial.print("\n");
-              Serial.print("VALZ :");
-           Serial.print(valZ);
-           Serial.print("\n");
-        }
+
+         mNetworkData.yawAngle = valZ;
+         mNetworkData.pitchAngle = valZ;
+         mNetworkData.rollAngle = valZ;
+         sendPositionData();
+         Serial.print("VALZ :");
+         Serial.print(valZ);
+         Serial.print("\n");
       }
       lastClockForMultipleSensor = crtClockForMultipleSensor;
     }
@@ -184,6 +168,37 @@ String getDisplayMsg(){
   return "";
 }
 
+void sendPositionData(){
+
+  String networkDataMsg = "";
+   String flexData = "";
+   String mpu3060Data = "";
+
+    //  networkDataMsg = "\"flexPercentage\":\""+mNetworkData.flexPercentage+"\""; 
+      networkDataMsg = "\"yawData\":\""+mNetworkData.yawAngle+"\""; 
+      networkDataMsg += ",\"pitchData\":\""+mNetworkData.pitchAngle+"\""; 
+      networkDataMsg += ",\"rollData\":\""+mNetworkData.rollAngle+"\""; 
+
+
+
+   if(networkDataMsg !=""){
+      String networkData = "";
+      networkData += "{\"action\":\"InGameType\"";
+      networkData += ",\"type\":\"ringData\"";
+      networkData += ",\"sender\":\"sensor1\"";    
+      networkData += ",\"gamehost\":\""+gameHostId+"\"";   
+      networkData += ","+networkDataMsg;         
+      networkData += "}";
+
+      Serial.print(" data ");
+      Serial.print(networkData);
+      Serial.print(" \n ");
+      SerialBT.println(networkData); 
+      
+   }
+   
+}
+
 void checkSendNetworkData(){
    String networkDataMsg = "";
    String flexData = "";
@@ -204,13 +219,13 @@ void checkSendNetworkData(){
       networkData += ",\"gamehost\":\""+gameHostId+"\"";   
       networkData += ","+networkDataMsg;         
       networkData += "}";
-      /*
+  
       Serial.print(" data ");
       Serial.print(networkData);
       Serial.print(" \n ");
       SerialBT.println(networkData); 
-      */
-      //client.send(networkData);
+   
+      
    }
    
 }
