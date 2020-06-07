@@ -202,17 +202,17 @@ void GetGyroscopeData(){
                 }
                 valZ = pitchAngle;
                
-                /*
-                Serial.print(aaReal.y);
-                Serial.print("\t");
-                Serial.println(aaReal.z);
-                */
                 
+                Serial.print(yawAngle);
+                Serial.print("\t");
+                //Serial.println(aaReal.z);
+                
+                /*
                 mNetworkData.dataIsSent = false;
                 mNetworkData.yawAngle = String(yawAngle);
                 mNetworkData.pitchAngle = String(pitchAngle);
                 mNetworkData.rollAngle  = String(rollAngle);
-
+              */
                 
                 lastYaw = yawAngle;
                 lastPitch = pitchAngle;
