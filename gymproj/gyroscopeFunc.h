@@ -200,7 +200,7 @@ void GetGyroscopeData(){
                     x_S = (0.3*xSensorVal) + ((1-0.3)*x_S);
                     xHighpass = xSensorVal - x_S;  
                 }
-                valZ = pitchAngle;
+                valZ = rollAngle;
                
                 
                 Serial.print(yawAngle);

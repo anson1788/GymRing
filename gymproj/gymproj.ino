@@ -57,7 +57,7 @@ NetworkClass mNetworkDataMotion;
 
 #include "gyroscopeFunc.h"
 #include "displayFunc.h"
-#include "flexFunc.h"
+
 
 #include "BluetoothSerial.h"
 BluetoothSerial SerialBT;
@@ -76,25 +76,15 @@ void setup() {
   Serial.begin(115200);
 
   MPU6050_Init();
-  initFlex();
   SerialBT.begin("BLETEST");
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 }
 
 String receivedMsg = "";
 String DisplayMsg = "";
-void loop() {
-
-
-  if (scale.is_ready()) {
-    long reading = scale.read();
-    Serial.print("HX711 reading: ");
-    Serial.println(reading);
-  } else {
-   // Serial.println("HX711 not found.");
-  }
-  
+void loop() {  
   receivedMsg = "";
+  getRingData();
   while (SerialBT.available()) {
     char incomingChar = SerialBT.read();
     receivedMsg += String(incomingChar);
@@ -116,9 +106,30 @@ long crtClockForMultipleSensor = -999;
 long lastClockForMultipleSensor = -999;
 
 long crtFlexSendTime = -999;
-
+long ringVal = 0;
+long ringVal_S = -1;
+void getRingData(){
+  
+  if (scale.is_ready()) {
+    long reading = scale.read();
+    //Serial.print("HX711 reading: ");
+    //Serial.println(ringVal);
+    if(ringVal_S==-1){
+      ringVal_S = reading;
+    }else{  
+      
+      ringVal = reading - ringVal_S;  
+      ringVal_S = reading;
+      if (ringVal > 130000){
+        Serial.print("HX711 reading: ");
+        Serial.println(ringVal);    
+      }
+    }
+  } else {
+ 
+  }
+}
 void handleSensorData() {
-  updateFlexValue();
   crtClockForMultipleSensor = millis();
   if (lastClockForMultipleSensor == -999) {
     lastClockForMultipleSensor = crtClockForMultipleSensor;
@@ -128,9 +139,9 @@ void handleSensorData() {
     crtFlexSendTime = crtClockForMultipleSensor;
   }
 
-  if (crtClockForMultipleSensor - lastClockForMultipleSensor > 60) {
+  if (crtClockForMultipleSensor - lastClockForMultipleSensor > 30) {
     if (state == GameState::RequestCalibration) {
-      if (flexSensorVal > 1200 && crtClockForMultipleSensor - crtFlexSendTime > 350) {
+      if (ringVal > 130000 && crtClockForMultipleSensor - crtFlexSendTime > 250) {
         SerialBT.println("{\"action\":\"StartCalibrating\"}");
         crtFlexSendTime = crtClockForMultipleSensor;
         calibratingForMPU();
@@ -138,13 +149,13 @@ void handleSensorData() {
         state = GameState::RequestCompleteAndStartMotionExchange;
       }
 
-      Serial.print("flex :");
-      Serial.print(flexSensorVal);
+      Serial.print("ringVal :");
+      Serial.print(ringVal);
       Serial.print("\n");
     } else if (state == GameState::RequestCompleteAndStartMotionExchange) {
 
       mNetworkData.dataIsSent = true;
-      if (flexSensorVal > 1200 && crtClockForMultipleSensor - crtFlexSendTime > 350) {
+      if (ringVal > 130000 && crtClockForMultipleSensor - crtFlexSendTime > 250) {
         Serial.print("Time :");
         Serial.print(crtClockForMultipleSensor - crtFlexSendTime);
         Serial.print("\n");
