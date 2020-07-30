@@ -112,15 +112,17 @@ void getRingData(){
   
   if (scale.is_ready()) {
     long reading = scale.read();
-    //Serial.print("HX711 reading: ");
-    //Serial.println(ringVal);
+
     if(ringVal_S==-1){
       ringVal_S = reading;
     }else{  
       
       ringVal = reading - ringVal_S;  
       ringVal_S = reading;
-      if (ringVal > 130000){
+
+      Serial.print("HX711 reading: ");
+      Serial.println(ringVal);
+      if (ringVal < -130000){
         Serial.print("HX711 reading: ");
         Serial.println(ringVal);    
       }
@@ -141,7 +143,7 @@ void handleSensorData() {
 
   if (crtClockForMultipleSensor - lastClockForMultipleSensor > 30) {
     if (state == GameState::RequestCalibration) {
-      if (ringVal > 130000 && crtClockForMultipleSensor - crtFlexSendTime > 250) {
+      if (ringVal < -130000 && crtClockForMultipleSensor - crtFlexSendTime > 250) {
         SerialBT.println("{\"action\":\"StartCalibrating\"}");
         crtFlexSendTime = crtClockForMultipleSensor;
         calibratingForMPU();
@@ -155,7 +157,7 @@ void handleSensorData() {
     } else if (state == GameState::RequestCompleteAndStartMotionExchange) {
 
       mNetworkData.dataIsSent = true;
-      if (ringVal > 130000 && crtClockForMultipleSensor - crtFlexSendTime > 250) {
+      if (ringVal < -130000 && crtClockForMultipleSensor - crtFlexSendTime > 250) {
         Serial.print("Time :");
         Serial.print(crtClockForMultipleSensor - crtFlexSendTime);
         Serial.print("\n");
